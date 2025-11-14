@@ -34,7 +34,7 @@ html,body{margin:0;padding:0;background:#fff;font-family:system-ui,-apple-system
 
 <div class="wrap">
   <!-- Byt denna URL till din GitHub Pages-URL för planritningsbilden -->
-  <img class="plan" src="https://github.com/SamiNylander/Heimstaden/7815141-1405.jpg" alt="Planritning – 2 rok 74 m²">
+  <img class="plan" src="https://github.com/SamiNylander/Heimstaden/blob/main/7815141-1405.jpg" alt="Planritning – 2 rok 74 m²">
 
   <!-- Prickar: justera top/left (%) vid behov -->
   <button class="dot" style="top:46%;left:22%;background:#9ad0ff" data-room="Vardagsrum" aria-label="Vardagsrum"><span></span></button>
@@ -74,23 +74,23 @@ html,body{margin:0;padding:0;background:#fff;font-family:system-ui,-apple-system
 /* Byt bild-URL:er nedan till dina GitHub Pages-länkar */
 const galleries = {
   "Badrum/WC": [
-    https://github.com/SamiNylander/Heimstaden/1000001916.jpg",
-    https://github.com/SamiNylander/Heimstaden/1000001918.jpg"
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001916.jpg",
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001918.jpg"
   ],
   "Vardagsrum": [
-    https://github.com/SamiNylander/Heimstaden/1000001903.jpg"
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001903.jpg"
   ],
   "Kök": [
-    https://github.com/SamiNylander/Heimstaden/1000001905.jpg",
-    https://github.com/SamiNylander/Heimstaden/1000001906.jpg",
-    https://github.com/SamiNylander/Heimstaden/1000001909.jpg",
-    https://github.com/SamiNylander/Heimstaden/1000001914.jpg"
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001905.jpg",
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001906.jpg",
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001909.jpg",
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001914.jpg"
   ],
   "Hall/Övrigt": [
-    https://github.com/SamiNylander/Heimstaden/1000001902.jpg"
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001902.jpg"
   ],
   "Sovrum": [
-    "https://github.com/SamiNylander/Heimstaden/1000001911.jpg"
+    "https://github.com/SamiNylander/Heimstaden/blob/main/1000001911.jpg"
   ]
 };
 
