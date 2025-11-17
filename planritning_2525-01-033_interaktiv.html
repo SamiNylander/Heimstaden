@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Interaktiv planritning – 3 rok ca 91 m² (2525-01-033)</title>
+<style>
+:root{ --heim:#f37021; }
+html,body{margin:0;padding:0;background:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{position:relative;max-width:1100px;margin:0 auto}
+.plan{width:100%;display:block;height:auto}
+
+/* Dots + etiketter */
+.dot{position:absolute;width:28px;height:28px;border-radius:50%;border:2px solid #111;display:grid;place-items:center;cursor:pointer;transform:translate(-50%,-50%);box-shadow:0 2px 6px rgba(0,0,0,.25);transition:transform .15s ease}
+.dot:hover{transform:translate(-50%,-50%) scale(1.06)}
+.dot span{display:block;width:10px;height:10px;border-radius:50%;background:#111}
+.tag{position:absolute;transform:translate(-50%, calc(-50% - 22px));background:rgba(0,0,0,.75);color:#fff;font-size:12px;padding:2px 6px;border-radius:4px;white-space:nowrap;pointer-events:none}
+
+/* Modal / galleri */
+.modal{position:fixed;inset:0;display:none;background:rgba(0,0,0,.6);align-items:center;justify-content:center;z-index:50}
+.modal[open]{display:flex}
+.card{background:#fff;width:min(100vw - 24px, 1060px);border-radius:12px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.head{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--heim);color:#fff}
+.head h3{margin:0;font-size:16px}
+.xbtn{border:0;background:transparent;color:#fff;font-size:24px;cursor:pointer;line-height:1}
+.viewer{background:#000}
+.viewer img{display:block;width:100%;height:auto}
+.nav{display:flex;gap:10px;padding:10px;justify-content:space-between;align-items:center}
+.btn{border:0;padding:10px 14px;border-radius:8px;background:#f0f0f0;cursor:pointer}
+.btn:active{transform:translateY(1px)}
+.thumbs{display:flex;gap:8px;overflow:auto;padding:0 6px}
+.thumbs img{height:60px;border-radius:6px;cursor:pointer;opacity:.85}
+.thumbs img.active{outline:3px solid var(--heim);opacity:1}
+.credits{text-align:center;font-size:12px;color:#666;padding:8px 0 16px}
+
+/* Helskärm-knapp + logotyp */
+.fs-btn{
+  position:fixed; top:12px; right:12px; z-index:60;
+  border:0; border-radius:10px; padding:10px 14px; background:var(--heim); color:#fff; cursor:pointer;
+  box-shadow:0 2px 8px rgba(0,0,0,.25)
+}
+.brand{
+  position:fixed; right:14px; bottom:14px; z-index:40;
+  opacity:.7; transition:opacity .2s ease;
+}
+.brand:hover{opacity:.95}
+.brand img{height:28px; display:block}
+</style>
+</head>
+<body>
+
+<button class="fs-btn" onclick="goFullscreen()" aria-label="Visa i helskärm">⛶&nbsp;Helskärm</button>
+
+<div class="wrap">
+  <!-- PLANRITNING -->
+  <img class="plan" id="plan" alt="Planritning – 3 rok 91 m²">
+
+  <!-- PRICKAR (top/left i %; justera vid behov) -->
+  <!-- Vardagsrum (stora blå rummet till höger) -->
+  <button class="dot" style="top:48%;left:68%;background:#bcd9ff" data-room="Vardagsrum" aria-label="Vardagsrum"><span></span></button>
+  <div class="tag" style="top:48%;left:68%;">Vardagsrum</div>
+
+  <!-- Kök (gult, mitt) -->
+  <button class="dot" style="top:52%;left:43%;background:#ffe27a" data-room="Kök" aria-label="Kök"><span></span></button>
+  <div class="tag" style="top:52%;left:43%;">Kök</div>
+
+  <!-- Sovrum 1 (höger sida) -->
+  <button class="dot" style="top:28%;left:90%;background:#9be39b" data-room="Sovrum 1 (höger)" aria-label="Sovrum 1 (höger)"><span></span></button>
+  <div class="tag" style="top:28%;left:90%;">Sovrum 1 (höger)</div>
+
+  <!-- Sovrum 2 (vänster sida) -->
+  <button class="dot" style="top:67%;left:18%;background:#9be39b" data-room="Sovrum 2 (vänster)" aria-label="Sovrum 2 (vänster)"><span></span></button>
+  <div class="tag" style="top:67%;left:18%;">Sovrum 2 (vänster)</div>
+
+  <!-- Badrum/WC (uppe till vänster) -->
+  <button class="dot" style="top:13%;left:12%;background:#ff8f8f" data-room="Badrum/WC" aria-label="Badrum/WC"><span></span></button>
+  <div class="tag" style="top:13%;left:12%;">Badrum/WC</div>
+
+  <!-- Hall/Övrigt (vita korridoren upptill) -->
+  <button class="dot" style="top:16%;left:52%;background:#dddddd" data-room="Hall/Övrigt" aria-label="Hall/Övrigt"><span></span></button>
+  <div class="tag" style="top:16%;left:52%;">Hall/Övrigt</div>
+</div>
+
+<!-- MODAL -->
+<div class="modal" id="m">
+  <div class="card">
+    <div class="head">
+      <h3 id="title">Rum</h3>
+      <button class="xbtn" onclick="closeM()" aria-label="Stäng">×</button>
+    </div>
+    <div class="viewer"><img id="main" alt=""></div>
+    <div class="nav">
+      <button class="btn" onclick="prev()">◀ Föregående</button>
+      <div id="thumbs" class="thumbs"></div>
+      <button class="btn" onclick="next()">Nästa ▶</button>
+    </div>
+    <div class="credits">Heimstaden – Interaktiv planritning (Objektnr 2525-01-033)</div>
+  </div>
+</div>
+
+<!-- Heimstaden logotyp (vit) nere till höger – inline SVG som data-URI -->
+<a class="brand" href="https://www.heimstaden.com/" target="_blank" rel="noopener">
+  <img alt="Heimstaden" src='data:image/svg+xml;utf8,
+  <svg xmlns="http://www.w3.org/2000/svg" width="340" height="60" viewBox="0 0 680 120">
+    <rect fill="none" width="680" height="120"/>
+    <text x="0" y="85" font-family="Segoe UI, Arial, Helvetica, sans-serif" font-size="84" fill="white" font-weight="700">HEIMSTADEN</text>
+  </svg>' />
+</a>
+
+<script>
+/* Bas-URL till ditt repo Heimstaden */
+const BASE = "https://saminylander.github.io/Heimstaden/";
+
+/* Planritning */
+const PLAN = BASE + "Planritning7807101-1103.jpg";
+document.getElementById("plan").src = PLAN;
+
+/* Gallerier (uppdaterade enligt dina ändringar) */
+const galleries = {
+  "Hall/Övrigt": [ BASE+"IMG_8069.jpeg", BASE+"IMG_8068.jpeg" ],
+  "Kök": [ BASE+"IMG_8074.jpeg", BASE+"IMG_8073.jpeg" ],
+  "Vardagsrum": [ BASE+"IMG_8075.jpeg", BASE+"IMG_8076.jpeg" ],
+  "Sovrum 1 (höger)": [ BASE+"IMG_8080.jpeg", BASE+"IMG_8079.jpeg" ],
+  "Sovrum 2 (vänster)": [ BASE+"IMG_8072.jpeg" ],
+  "Badrum/WC": [ BASE+"IMG_8070.jpeg" ]
+};
+
+/* Interaktion */
+let room=null, idx=0;
+function openM(r){
+  room=r; idx=0;
+  document.getElementById('title').textContent=r;
+  const imgs=galleries[r]||[];
+  const viewer=document.getElementById('main');
+  const thumbs=document.getElementById('thumbs');
+  thumbs.innerHTML='';
+  if(imgs.length){
+    viewer.src=imgs[0];
+    imgs.forEach((src,i)=>{const im=new Image(); im.src=src; im.onclick=()=>show(i); if(i===0) im.classList.add('active'); thumbs.appendChild(im);});
+  }else{
+    viewer.src='data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450"><rect width="100%" height="100%" fill="black"/><text x="50%" y="50%" fill="white" font-size="28" text-anchor="middle" dominant-baseline="middle">Inga bilder tillgängliga</text></svg>');
+  }
+  document.getElementById('m').setAttribute('open','');
+}
+function closeM(){ document.getElementById('m').removeAttribute('open'); }
+function show(i){
+  idx=i; const imgs=galleries[room]; document.getElementById('main').src=imgs[i];
+  [...document.querySelectorAll('#thumbs img')].forEach((n,k)=>n.classList.toggle('active',k===i));
+}
+function prev(){ const imgs=galleries[room]||[]; if(!imgs.length) return; idx=(idx-1+imgs.length)%imgs.length; show(idx); }
+function next(){ const imgs=galleries[room]||[]; if(!imgs.length) return; idx=(idx+1)%imgs.length; show(idx); }
+document.querySelectorAll('.dot').forEach(d=>d.addEventListener('click',()=>openM(d.dataset.room)));
+window.addEventListener('keydown',e=>{ if(e.key==='Escape') closeM(); });
+
+/* Helskärm */
+function goFullscreen(){
+  const el = document.documentElement;
+  if(el.requestFullscreen) el.requestFullscreen();
+  else if(el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  else if(el.msRequestFullscreen) el.msRequestFullscreen();
+}
+</script>
+</body>
+</html>
