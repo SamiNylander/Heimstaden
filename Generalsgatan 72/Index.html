@@ -5,12 +5,6 @@
   <title>Planritning 1403 – 360°-visning</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <!-- Photo Sphere Viewer (CSS) -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/photo-sphere-viewer@5/dist/photo-sphere-viewer.css"
-  />
-
   <style>
     body {
       margin: 0;
@@ -156,12 +150,18 @@
       border-radius: 12px;
       overflow: hidden;
       background: #000;
+      position: relative;
     }
 
-    /* Div där 360-viewern ritas ut */
-    #viewer {
-      width: 100%;
+    /* Själva panoramabilden som vi drar i */
+    .panorama-image {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
       height: 100%;
+      user-select: none;
+      pointer-events: none; /* själva bilden tar inte emot events, bara containern */
     }
 
     .overlay-footer {
@@ -185,21 +185,19 @@
 <body>
   <header>
     <h1>Planritning 1403 – 360°-visning</h1>
-    <p>Klicka på en prick i planritningen för att öppna en 360°-vy.</p>
+    <p>Klicka på en prick i planritningen för att öppna en panoramavy och dra sedan vänster/höger.</p>
   </header>
 
   <main>
     <div class="plan-container">
-      <!-- Din planritning -->
+      <!-- Planritningen som JPG -->
       <img
-  src="Planritning1079103-1403.jpg"
-  alt="Planritning lägenhet 1403"
-  class="plan-image"
-/>
-
+        src="Planritning1079103-1403.jpg"
+        alt="Planritning lägenhet 1403"
+        class="plan-image"
       />
 
-      <!-- Vardagsrum (Vrum.jpg) -->
+      <!-- Vardagsrum -->
       <div
         class="hotspot"
         data-panorama-src="Vrum.jpg"
@@ -210,7 +208,7 @@
         <div class="hotspot-label">Vardagsrum 360°</div>
       </div>
 
-      <!-- Hall (hall.jpg) -->
+      <!-- Hall -->
       <div
         class="hotspot"
         data-panorama-src="hall.jpg"
@@ -221,7 +219,7 @@
         <div class="hotspot-label">Hall 360°</div>
       </div>
 
-      <!-- Badrum (Badrum.jpg) -->
+      <!-- Badrum -->
       <div
         class="hotspot"
         data-panorama-src="Badrum.jpg"
@@ -243,54 +241,40 @@
           &times;
         </button>
       </div>
-      <div class="overlay-panorama">
-        <!-- Här ritas Photo Sphere Viewer in -->
-        <div id="viewer"></div>
+      <div class="overlay-panorama" id="panorama-container">
+        <img id="panorama-image" class="panorama-image" src="" alt="Panorama" />
       </div>
       <div class="overlay-footer">
-        Använd musen eller fingret för att vrida runt i bilden.
+        Klicka och dra vänster/höger för att ”vrida runt” i bilden.
       </div>
     </div>
   </div>
-
-  <!-- Photo Sphere Viewer (JS + beroenden) -->
-  <script src="https://unpkg.com/uevent@2/browser.js"></script>
-  <script src="https://unpkg.com/three@0.159.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/photo-sphere-viewer@5/dist/photo-sphere-viewer.js"></script>
 
   <script>
     const hotspots = document.querySelectorAll(".hotspot");
     const overlay = document.getElementById("overlay");
     const overlayTitle = document.getElementById("overlay-title");
     const overlayClose = document.getElementById("overlay-close");
-    const viewerContainer = document.getElementById("viewer");
+    const panoContainer = document.getElementById("panorama-container");
+    const panoImage = document.getElementById("panorama-image");
 
-    let viewer = null; // Photo Sphere Viewer-instans
+    let isDragging = false;
+    let startX = 0;
+    let currentOffset = 0;
 
-    // Funktion: öppna overlay och starta viewer
     function openPanorama(src, title) {
       overlay.classList.add("active");
       overlayTitle.textContent = title || "Panorama";
+      panoImage.src = src;
+      // centrera bilden från början
+      currentOffset = 0;
+      panoImage.style.transform = `translateX(-50%)`;
+    }
 
-      // Om det redan finns en viewer: förstör den innan vi skapar en ny
-      if (viewer) {
-        viewer.destroy();
-        viewer = null;
-      }
-
-      // Skapa ny 360-viewer
-      viewer = new PhotoSphereViewer.Viewer({
-        container: viewerContainer,
-        panorama: src,
-        touchmoveTwoFingers: true,
-        mousewheel: true,
-        navbar: [
-          "zoom",
-          "fullscreen",
-          "caption"
-        ],
-        caption: title || "Panorama"
-      });
+    function closeOverlay() {
+      overlay.classList.remove("active");
+      panoImage.src = "";
+      isDragging = false;
     }
 
     // Klick på hotspots
@@ -301,15 +285,6 @@
         openPanorama(src, title);
       });
     });
-
-    // Stäng overlay
-    function closeOverlay() {
-      overlay.classList.remove("active");
-      if (viewer) {
-        viewer.destroy();
-        viewer = null;
-      }
-    }
 
     overlayClose.addEventListener("click", closeOverlay);
 
@@ -324,6 +299,34 @@
         closeOverlay();
       }
     });
+
+    // --- Enkel ”drag to look around” ---
+    function onPointerDown(event) {
+      isDragging = true;
+      startX = event.clientX || event.touches?.[0]?.clientX;
+    }
+
+    function onPointerMove(event) {
+      if (!isDragging) return;
+      const x = event.clientX || event.touches?.[0]?.clientX;
+      const delta = x - startX;
+      startX = x;
+      // justera offset (negativt/positivt) och uppdatera transform
+      currentOffset += delta;
+      panoImage.style.transform = `translateX(calc(-50% + ${currentOffset}px))`;
+    }
+
+    function onPointerUp() {
+      isDragging = false;
+    }
+
+    panoContainer.addEventListener("mousedown", onPointerDown);
+    panoContainer.addEventListener("mousemove", onPointerMove);
+    document.addEventListener("mouseup", onPointerUp);
+
+    panoContainer.addEventListener("touchstart", onPointerDown, { passive: true });
+    panoContainer.addEventListener("touchmove", onPointerMove, { passive: true });
+    document.addEventListener("touchend", onPointerUp);
   </script>
 </body>
 </html>
