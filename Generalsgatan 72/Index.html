@@ -243,16 +243,14 @@
           &times;
         </button>
       </div>
-      <div class="overlay-panorama" id="panorama-container">
-        <img
-  id="panorama-image"
-  class="panorama-image"
-  src=""
-  alt="Panorama"
-  onerror="console.error('KUNDE INTE LADDA PANORAMA:', this.src)"
-/>
-
-      </div>
+     <div class="overlay-panorama" id="panorama-container">
+  <img
+    id="panorama-image"
+    class="panorama-image"
+    alt="Panorama"
+    onerror="console.error('KUNDE INTE LADDA PANORAMA:', this.src)"
+  />
+</div>
       <div class="overlay-footer">
         Klicka och dra vänster/höger för att ”vrida runt” i bilden.
       </div>
@@ -260,83 +258,85 @@
   </div>
 
   <script>
-    const hotspots = document.querySelectorAll(".hotspot");
-    const overlay = document.getElementById("overlay");
-    const overlayTitle = document.getElementById("overlay-title");
-    const overlayClose = document.getElementById("overlay-close");
-    const panoContainer = document.getElementById("panorama-container");
-    const panoImage = document.getElementById("panorama-image");
+  const hotspots = document.querySelectorAll(".hotspot");
+  const overlay = document.getElementById("overlay");
+  const overlayTitle = document.getElementById("overlay-title");
+  const overlayClose = document.getElementById("overlay-close");
+  const panoContainer = document.getElementById("panorama-container");
+  const panoImage = document.getElementById("panorama-image");
 
-    let isDragging = false;
-    let startX = 0;
-    let currentOffset = 0;
+  let isDragging = false;
+  let startX = 0;
+  let currentOffset = 0;
 
-    function openPanorama(src, title) {
-      overlay.classList.add("active");
-      overlayTitle.textContent = title || "Panorama";
-      panoImage.src = src;
-      // centrera bilden från början
-      currentOffset = 0;
-      panoImage.style.transform = `translateX(-50%)`;
-    }
+  function openPanorama(src, title) {
+    console.log("ÖPPNAR PANORAMA:", src);
+    overlay.classList.add("active");
+    overlayTitle.textContent = title || "Panorama";
 
-    function closeOverlay() {
-      overlay.classList.remove("active");
-      panoImage.src = "";
-      isDragging = false;
-    }
+    // sätt rätt bild
+    currentOffset = 0;
+    panoImage.style.transform = `translateX(-50%)`;
+    panoImage.src = src;
+  }
 
-    // Klick på hotspots
-    hotspots.forEach((hotspot) => {
-      hotspot.addEventListener("click", () => {
-        const src = hotspot.getAttribute("data-panorama-src");
-        const title = hotspot.getAttribute("data-panorama-title");
-        openPanorama(src, title);
-      });
+  function closeOverlay() {
+    overlay.classList.remove("active");
+    panoImage.src = ""; // töm när vi stänger
+    isDragging = false;
+  }
+
+  // Klick på hotspots
+  hotspots.forEach((hotspot) => {
+    hotspot.addEventListener("click", () => {
+      const src = hotspot.getAttribute("data-panorama-src");
+      const title = hotspot.getAttribute("data-panorama-title");
+      openPanorama(src, title);
     });
+  });
 
-    overlayClose.addEventListener("click", closeOverlay);
+  overlayClose.addEventListener("click", closeOverlay);
 
-    overlay.addEventListener("click", (event) => {
-      if (event.target === overlay) {
-        closeOverlay();
-      }
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape" && overlay.classList.contains("active")) {
-        closeOverlay();
-      }
-    });
-
-    // --- Enkel ”drag to look around” ---
-    function onPointerDown(event) {
-      isDragging = true;
-      startX = event.clientX || event.touches?.[0]?.clientX;
+  overlay.addEventListener("click", (event) => {
+    if (event.target === overlay) {
+      closeOverlay();
     }
+  });
 
-    function onPointerMove(event) {
-      if (!isDragging) return;
-      const x = event.clientX || event.touches?.[0]?.clientX;
-      const delta = x - startX;
-      startX = x;
-      // justera offset (negativt/positivt) och uppdatera transform
-      currentOffset += delta;
-      panoImage.style.transform = `translateX(calc(-50% + ${currentOffset}px))`;
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && overlay.classList.contains("active")) {
+      closeOverlay();
     }
+  });
 
-    function onPointerUp() {
-      isDragging = false;
-    }
+  // --- Enkel drag-to-look-around ---
+  function onPointerDown(event) {
+    isDragging = true;
+    startX = event.clientX || (event.touches && event.touches[0].clientX);
+  }
 
-    panoContainer.addEventListener("mousedown", onPointerDown);
-    panoContainer.addEventListener("mousemove", onPointerMove);
-    document.addEventListener("mouseup", onPointerUp);
+  function onPointerMove(event) {
+    if (!isDragging) return;
+    const x = event.clientX || (event.touches && event.touches[0].clientX);
+    const delta = x - startX;
+    startX = x;
+    currentOffset += delta;
+    panoImage.style.transform = `translateX(calc(-50% + ${currentOffset}px))`;
+  }
 
-    panoContainer.addEventListener("touchstart", onPointerDown, { passive: true });
-    panoContainer.addEventListener("touchmove", onPointerMove, { passive: true });
-    document.addEventListener("touchend", onPointerUp);
-  </script>
+  function onPointerUp() {
+    isDragging = false;
+  }
+
+  panoContainer.addEventListener("mousedown", onPointerDown);
+  panoContainer.addEventListener("mousemove", onPointerMove);
+  document.addEventListener("mouseup", onPointerUp);
+
+  panoContainer.addEventListener("touchstart", onPointerDown, { passive: true });
+  panoContainer.addEventListener("touchmove", onPointerMove, { passive: true });
+  document.addEventListener("touchend", onPointerUp);
+</script>
 </body>
 </html>
+
 
