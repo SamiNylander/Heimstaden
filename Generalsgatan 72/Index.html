@@ -154,15 +154,17 @@
     }
 
     /* Själva panoramabilden som vi drar i */
-    .panorama-image {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      height: 100%;
-      user-select: none;
-      pointer-events: none; /* själva bilden tar inte emot events, bara containern */
-    }
+.panorama-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  height: auto;
+  width: 130%; /* gör den lite bredare så man verkligen kan dra */
+  user-select: none;
+  pointer-events: none;
+}
+
 
     .overlay-footer {
       font-size: 12px;
@@ -242,7 +244,14 @@
         </button>
       </div>
       <div class="overlay-panorama" id="panorama-container">
-        <img id="panorama-image" class="panorama-image" src="" alt="Panorama" />
+        <img
+  id="panorama-image"
+  class="panorama-image"
+  src=""
+  alt="Panorama"
+  onerror="console.error('KUNDE INTE LADDA PANORAMA:', this.src)"
+/>
+
       </div>
       <div class="overlay-footer">
         Klicka och dra vänster/höger för att ”vrida runt” i bilden.
@@ -330,3 +339,4 @@
   </script>
 </body>
 </html>
+
