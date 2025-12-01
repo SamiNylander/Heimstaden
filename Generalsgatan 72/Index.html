@@ -153,14 +153,14 @@
       position: relative;
     }
 
-    /* Själva panoramabilden som vi drar i */
-.panorama-image {
-  position: relative;
-  display: block;
-  width: 100%;
-  height: auto;
-  user-select: none;
-}
+    /* Panoramabilden – enkel, kompatibel */
+    .panorama-image {
+      position: relative;
+      display: block;
+      width: 100%;
+      height: auto;
+      user-select: none;
+    }
 
     .overlay-footer {
       font-size: 12px;
@@ -183,21 +183,18 @@
 <body>
   <header>
     <h1>Planritning 1403 – 360°-visning</h1>
-    <p>Klicka på en prick i planritningen för att öppna en panoramavy och dra sedan vänster/höger.</p>
+    <p>Klicka på en prick i planritningen för att öppna panoramabilden.</p>
   </header>
 
   <main>
     <div class="plan-container">
-      <!-- Planritningen som JPG -->
+      <!-- Planritningen -->
       <img
         src="Planritning1079103-1403.jpg"
         alt="Planritning lägenhet 1403"
         class="plan-image"
       />
 
-<!-- TILLFÄLLIG TEST: visa vardagsrummet direkt -->
-  <img src="Vrum.jpg" alt="Test Vrum" style="width: 300px; border: 2px solid red; display: block; margin: 10px auto;" />
-      
       <!-- Vardagsrum -->
       <div
         class="hotspot"
@@ -242,109 +239,62 @@
           &times;
         </button>
       </div>
-     <div class="overlay-panorama" id="panorama-container">
-  <img
-    id="panorama-image"
-    class="panorama-image"
-    alt="Panorama"
-    onerror="console.error('KUNDE INTE LADDA PANORAMA:', this.src)"
-  />
-</div>
+      <div class="overlay-panorama" id="panorama-container">
+        <img
+          id="panorama-image"
+          class="panorama-image"
+          alt="Panorama"
+          onerror="console.error('KUNDE INTE LADDA PANORAMA:', this.src)"
+        />
+      </div>
       <div class="overlay-footer">
-        Klicka och dra vänster/höger för att ”vrida runt” i bilden.
+        (Just nu: stillbild. När detta funkar bra kan vi lägga tillbaka drag-funktionen.)
       </div>
     </div>
   </div>
 
   <script>
-  const hotspots = document.querySelectorAll(".hotspot");
-  const overlay = document.getElementById("overlay");
-  const overlayTitle = document.getElementById("overlay-title");
-  const overlayClose = document.getElementById("overlay-close");
-  const panoContainer = document.getElementById("panorama-container");
-  const panoImage = document.getElementById("panorama-image");
+    // Enkel, kompatibel JS (inga specialgrejer)
+    var hotspots = document.querySelectorAll(".hotspot");
+    var overlay = document.getElementById("overlay");
+    var overlayTitle = document.getElementById("overlay-title");
+    var overlayClose = document.getElementById("overlay-close");
+    var panoImage = document.getElementById("panorama-image");
 
-  let isDragging = false;
-  let startX = 0;
-  let currentOffset = 0;
+    function openPanorama(src, title) {
+      console.log("ÖPPNAR PANORAMA:", src);
+      overlay.classList.add("active");
+      overlayTitle.textContent = title || "Panorama";
+      panoImage.src = src;
+    }
 
-  function openPanorama(src, title) {
-    console.log("ÖPPNAR PANORAMA:", src);
-    overlay.classList.add("active");
-    overlayTitle.textContent = title || "Panorama";
+    function closeOverlay() {
+      overlay.classList.remove("active");
+      panoImage.src = "";
+    }
 
-    // sätt rätt bild
-    currentOffset = 0;
-    panoImage.style.transform = `translateX(-50%)`;
-    panoImage.src = src;
-  }
+    // Klick på prickar
+    for (var i = 0; i < hotspots.length; i++) {
+      hotspots[i].addEventListener("click", function () {
+        var src = this.getAttribute("data-panorama-src");
+        var title = this.getAttribute("data-panorama-title");
+        openPanorama(src, title);
+      });
+    }
 
-  function closeOverlay() {
-    overlay.classList.remove("active");
-    panoImage.src = ""; // töm när vi stänger
-    isDragging = false;
-  }
+    overlayClose.addEventListener("click", closeOverlay);
 
-  // Klick på hotspots
-  hotspots.forEach((hotspot) => {
-    hotspot.addEventListener("click", () => {
-      const src = hotspot.getAttribute("data-panorama-src");
-      const title = hotspot.getAttribute("data-panorama-title");
-      openPanorama(src, title);
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        closeOverlay();
+      }
     });
-  });
 
-  overlayClose.addEventListener("click", closeOverlay);
-
-  overlay.addEventListener("click", (event) => {
-    if (event.target === overlay) {
-      closeOverlay();
-    }
-  });
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape" && overlay.classList.contains("active")) {
-      closeOverlay();
-    }
-  });
-
-  // --- Enkel drag-to-look-around ---
-  function onPointerDown(event) {
-    isDragging = true;
-    startX = event.clientX || (event.touches && event.touches[0].clientX);
-  }
-
-  function onPointerMove(event) {
-    if (!isDragging) return;
-    const x = event.clientX || (event.touches && event.touches[0].clientX);
-    const delta = x - startX;
-    startX = x;
-    currentOffset += delta;
-    panoImage.style.transform = `translateX(calc(-50% + ${currentOffset}px))`;
-  }
-
-  function onPointerUp() {
-    isDragging = false;
-  }
-    // --- Enkel drag-to-look-around ---
-function onPointerDown(event) { ... }
-function onPointerMove(event) { ... }
-function onPointerUp() { ... }
-    
-  panoContainer.addEventListener("mousedown", onPointerDown);
-  panoContainer.addEventListener("mousemove", onPointerMove);
-  document.addEventListener("mouseup", onPointerUp);
-
-  panoContainer.addEventListener("touchstart", onPointerDown, { passive: true });
-  panoContainer.addEventListener("touchmove", onPointerMove, { passive: true });
-  document.addEventListener("touchend", onPointerUp);
-</script>
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && overlay.classList.contains("active")) {
+        closeOverlay();
+      }
+    });
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
