@@ -145,25 +145,32 @@
       color: #e5e7eb;
     }
 
-   .overlay-panorama {
-  flex: 1;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
-  position: relative;
-}
+    .overlay-panorama {
+      flex: 1;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #000;
+      position: relative;
+    }
 
-/* Panoramabilden – lite bredare så vi kan ”dra runt” */
-.panorama-image {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 150%;      /* gör bilden bredare än rutan */
-  height: auto;
-  user-select: none;
-  pointer-events: none; /* vi lyssnar på container istället */
-}
+    /* --- 360-stripen (3 bilder i rad) --- */
+    .panorama-strip {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      height: auto;
+      width: 450%;          /* 3 x 150% */
+      display: flex;
+      transform: translate(-50%, -50%);
+      pointer-events: none; /* vi lyssnar på containern */
+    }
+
+    .pano-frame {
+      width: 150%;
+      height: auto;
+      user-select: none;
+      pointer-events: none;
+    }
 
     .overlay-footer {
       font-size: 12px;
@@ -186,7 +193,7 @@
 <body>
   <header>
     <h1>Planritning 1403 – 360°-visning</h1>
-    <p>Klicka på en prick i planritningen för att öppna panoramabilden.</p>
+    <p>Klicka på en prick i planritningen för att öppna panoramabilden och dra vänster/höger.</p>
   </header>
 
   <main>
@@ -244,100 +251,110 @@
       </div>
       <div class="overlay-panorama" id="panorama-container">
         <div id="panorama-strip" class="panorama-strip">
-  <img class="pano-frame" />
-  <img class="pano-frame" />
-  <img class="pano-frame" />
-</div>
-
+          <img class="pano-frame" />
+          <img class="pano-frame" />
+          <img class="pano-frame" />
+        </div>
       </div>
       <div class="overlay-footer">
-        (Just nu: stillbild. När detta funkar bra kan vi lägga tillbaka drag-funktionen.)
+        Dra med musen eller fingret för att vrida runt (loopen fortsätter åt båda håll).
       </div>
     </div>
   </div>
 
- <script>
-  // Enkel, kompatibel JS (inga specialgrejer)
-  var hotspots = document.querySelectorAll(".hotspot");
-  var overlay = document.getElementById("overlay");
-  var overlayTitle = document.getElementById("overlay-title");
-  var overlayClose = document.getElementById("overlay-close");
-  var panoImage = document.getElementById("panorama-image");
-  var panoContainer = document.getElementById("panorama-container");
+  <script>
+    var hotspots = document.querySelectorAll(".hotspot");
+    var overlay = document.getElementById("overlay");
+    var overlayTitle = document.getElementById("overlay-title");
+    var overlayClose = document.getElementById("overlay-close");
+    var panoContainer = document.getElementById("panorama-container");
+    var strip = document.getElementById("panorama-strip");
+    var frames = document.querySelectorAll(".pano-frame");
 
-  function openPanorama(src, title) {
-    console.log("ÖPPNAR PANORAMA:", src);
-    overlay.classList.add("active");
-    overlayTitle.textContent = title || "Panorama";
+    var isDragging = false;
+    var startX = 0;
+    var offsetX = 0;    // aktuell förskjutning
 
-    currentOffset = 0;
-    panoImage.style.transform = "translate(-50%, -50%)";
-    panoImage.src = src;
-  }
+    function openPanorama(src, title) {
+      console.log("ÖPPNAR PANORAMA:", src);
+      overlay.classList.add("active");
+      overlayTitle.textContent = title || "Panorama";
 
-  function closeOverlay() {
-    overlay.classList.remove("active");
-    panoImage.src = "";
-  }
+      // ladda samma bild i alla tre ramar
+      frames[0].src = src;
+      frames[1].src = src;
+      frames[2].src = src;
 
-  // Klick på prickar
-  for (var i = 0; i < hotspots.length; i++) {
-    hotspots[i].addEventListener("click", function () {
-      var src = this.getAttribute("data-panorama-src");
-      var title = this.getAttribute("data-panorama-title");
-      openPanorama(src, title);
+      // nollställ läget
+      offsetX = 0;
+      strip.style.transform = "translate(-50%, -50%)";
+    }
+
+    function closeOverlay() {
+      overlay.classList.remove("active");
+    }
+
+    // Klick på prickar
+    for (var i = 0; i < hotspots.length; i++) {
+      hotspots[i].addEventListener("click", function () {
+        var src = this.getAttribute("data-panorama-src");
+        var title = this.getAttribute("data-panorama-title");
+        openPanorama(src, title);
+      });
+    }
+
+    overlayClose.addEventListener("click", closeOverlay);
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        closeOverlay();
+      }
     });
-  }
 
-  overlayClose.addEventListener("click", closeOverlay);
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && overlay.classList.contains("active")) {
+        closeOverlay();
+      }
+    });
 
-  overlay.addEventListener("click", function (event) {
-    if (event.target === overlay) {
-      closeOverlay();
+    // --- Drag + loop ---
+    function startDrag(event) {
+      isDragging = true;
+      startX = (event.touches && event.touches[0].clientX) || event.clientX;
     }
-  });
 
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && overlay.classList.contains("active")) {
-      closeOverlay();
+    function dragMove(event) {
+      if (!isDragging) return;
+      var x = (event.touches && event.touches[0].clientX) || event.clientX;
+      var delta = x - startX;
+      startX = x;
+      offsetX += delta;
+
+      // flytta stripen
+      strip.style.transform =
+        "translate(calc(-50% + " + offsetX + "px), -50%)";
+
+      // loop: justera om vi gått längre än en bilds bredd
+      var frameWidth = strip.clientWidth / 3; // en "pano-frame"-bredd
+
+      if (offsetX > frameWidth) {
+        offsetX -= frameWidth;
+      } else if (offsetX < -frameWidth) {
+        offsetX += frameWidth;
+      }
     }
-  });
 
-  // --- Enkel drag-to-look-around ---
-  var isDragging = false;
-  var startX = 0;
-  var currentOffset = 0;
+    function endDrag() {
+      isDragging = false;
+    }
 
-  function startDrag(event) {
-    isDragging = true;
-    startX = (event.touches && event.touches[0].clientX) || event.clientX;
-  }
+    panoContainer.addEventListener("mousedown", startDrag);
+    panoContainer.addEventListener("mousemove", dragMove);
+    document.addEventListener("mouseup", endDrag);
 
-  function dragMove(event) {
-    if (!isDragging) return;
-    var x = (event.touches && event.touches[0].clientX) || event.clientX;
-    var delta = x - startX;
-    startX = x;
-    currentOffset += delta;
-
-    panoImage.style.transform =
-      "translate(calc(-50% + " + currentOffset + "px), -50%)";
-  }
-
-  function endDrag() {
-    isDragging = false;
-  }
-
-  panoContainer.addEventListener("mousedown", startDrag);
-  panoContainer.addEventListener("mousemove", dragMove);
-  document.addEventListener("mouseup", endDrag);
-
-  panoContainer.addEventListener("touchstart", startDrag, { passive: true });
-  panoContainer.addEventListener("touchmove", dragMove, { passive: true });
-  document.addEventListener("touchend", endDrag);
-</script>
+    panoContainer.addEventListener("touchstart", startDrag, { passive: true });
+    panoContainer.addEventListener("touchmove", dragMove, { passive: true });
+    document.addEventListener("touchend", endDrag);
+  </script>
 </body>
 </html>
-
-
-
