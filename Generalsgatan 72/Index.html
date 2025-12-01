@@ -243,12 +243,12 @@
         </button>
       </div>
       <div class="overlay-panorama" id="panorama-container">
-        <img
-          id="panorama-image"
-          class="panorama-image"
-          alt="Panorama"
-          onerror="console.error('KUNDE INTE LADDA PANORAMA:', this.src)"
-        />
+        <div id="panorama-strip" class="panorama-strip">
+  <img class="pano-frame" />
+  <img class="pano-frame" />
+  <img class="pano-frame" />
+</div>
+
       </div>
       <div class="overlay-footer">
         (Just nu: stillbild. När detta funkar bra kan vi lägga tillbaka drag-funktionen.)
@@ -338,5 +338,6 @@
 </script>
 </body>
 </html>
+
 
 
