@@ -151,6 +151,10 @@
       overflow: hidden;
       background: #000;
       position: relative;
+       /* NYTT: ge rutan en verklig höjd */
+  height: 60vh;       /* 60% av fönstrets höjd */
+  max-height: 600px;  /* tak så den inte blir jättestor på stora skärmar */
+  min-height: 250px;  /* så den syns även på små skärmar */
     }
 
     /* --- 360-stripen (3 bilder i rad) --- */
@@ -358,3 +362,4 @@
   </script>
 </body>
 </html>
+
