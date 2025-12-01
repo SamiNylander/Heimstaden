@@ -145,22 +145,25 @@
       color: #e5e7eb;
     }
 
-    .overlay-panorama {
-      flex: 1;
-      border-radius: 12px;
-      overflow: hidden;
-      background: #000;
-      position: relative;
-    }
+   .overlay-panorama {
+  flex: 1;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  position: relative;
+}
 
-    /* Panoramabilden – enkel, kompatibel */
-    .panorama-image {
-      position: relative;
-      display: block;
-      width: 100%;
-      height: auto;
-      user-select: none;
-    }
+/* Panoramabilden – lite bredare så vi kan ”dra runt” */
+.panorama-image {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 150%;      /* gör bilden bredare än rutan */
+  height: auto;
+  user-select: none;
+  pointer-events: none; /* vi lyssnar på container istället */
+}
 
     .overlay-footer {
       font-size: 12px;
@@ -261,12 +264,15 @@
     var overlayClose = document.getElementById("overlay-close");
     var panoImage = document.getElementById("panorama-image");
 
-    function openPanorama(src, title) {
-      console.log("ÖPPNAR PANORAMA:", src);
-      overlay.classList.add("active");
-      overlayTitle.textContent = title || "Panorama";
-      panoImage.src = src;
-    }
+function openPanorama(src, title) {
+  console.log("ÖPPNAR PANORAMA:", src);
+  overlay.classList.add("active");
+  overlayTitle.textContent = title || "Panorama";
+
+  currentOffset = 0; // börja i mitten varje gång
+  panoImage.style.transform = "translate(-50%, -50%)";
+  panoImage.src = src;
+}
 
     function closeOverlay() {
       overlay.classList.remove("active");
@@ -294,7 +300,42 @@
       if (event.key === "Escape" && overlay.classList.contains("active")) {
         closeOverlay();
       }
+  // --- Enkel drag-to-look-around ---
+  var isDragging = false;
+  var startX = 0;
+  var currentOffset = 0;
+
+  function startDrag(event) {
+    isDragging = true;
+    // clientX funkar för både mus och touch (med fallback)
+    startX = (event.touches && event.touches[0].clientX) || event.clientX;
+  }
+
+  function dragMove(event) {
+    if (!isDragging) return;
+    var x = (event.touches && event.touches[0].clientX) || event.clientX;
+    var delta = x - startX;
+    startX = x;
+    currentOffset += delta;
+    // flytta bilden horisontellt
+    panoImage.style.transform = "translate(calc(-50% + " + currentOffset + "px), -50%)";
+  }
+
+  function endDrag() {
+    isDragging = false;
+  }
+
+  // lyssna på mus/touch på själva panoramarutan
+  panoContainer.addEventListener("mousedown", startDrag);
+  panoContainer.addEventListener("mousemove", dragMove);
+  document.addEventListener("mouseup", endDrag);
+
+  panoContainer.addEventListener("touchstart", startDrag, { passive: true });
+  panoContainer.addEventListener("touchmove", dragMove, { passive: true });
+  document.addEventListener("touchend", endDrag);
+
     });
   </script>
 </body>
 </html>
+
